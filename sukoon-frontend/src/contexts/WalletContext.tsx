@@ -2,6 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { ethers } from 'ethers';
 import WalletConnectProvider from '@walletconnect/ethereum-provider';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { useAuth } from './AuthContext';
 
 interface WalletState {
   address: string | null;
@@ -33,6 +34,7 @@ const SUPPORTED_CHAINS = [31337] as [number]; // Type as tuple without readonly
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletState, setWalletState] = useState<WalletState>(INITIAL_WALLET_STATE);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
+  const { authenticate } = useAuth();
 
   const resetWalletState = () => {
     setWalletState(INITIAL_WALLET_STATE);
@@ -58,6 +60,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         error: null
       }));
       setProvider(ethersProvider);
+
+      // Only authenticate if we don't already have a token
+      const existingToken = localStorage.getItem('auth_token');
+      if (!existingToken) {
+        await authenticate(ethersProvider as ethers.BrowserProvider, walletAddress);
+      }
     } catch (error) {
       handleError(error);
     }
@@ -67,13 +75,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setWalletState(prev => ({ ...prev, isConnecting: true, error: null }));
     
     try {
-      // Check if MetaMask is installed
       const isMetaMaskInstalled = await detectEthereumProvider();
       if (!isMetaMaskInstalled) {
         throw new Error('Please install MetaMask');
       }
 
-      // Create an ethers provider to interact with MetaMask
       const ethersProvider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts' 

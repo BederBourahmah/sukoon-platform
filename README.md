@@ -30,7 +30,17 @@ cd sukoon-platform
    ```
    The API will be available at https://localhost:7047
 
-3. Frontend Setup (React + Vite):
+3. Redis Setup (required for authentication):
+   ```bash
+   docker run --name sukoon-redis -p 6379:6379 -d redis
+   ```
+   Verify Redis is running:
+   ```bash
+   docker ps
+   ```
+   You should see the Redis container in the list.
+
+4. Frontend Setup (React + Vite):
    - Open a new terminal
    - Navigate to the frontend directory:
    ```bash

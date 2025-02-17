@@ -1,4 +1,7 @@
 using SukoonBackend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,33 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
+});
+
+// Add JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key not configured")))
+        };
+    });
+
+// Register AuthService
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = "SukoonAuth:";
 });
 
 var app = builder.Build();

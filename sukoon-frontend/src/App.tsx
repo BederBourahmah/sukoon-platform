@@ -2,16 +2,19 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './contexts/WalletContext';
 import HomePage from './pages/HomePage';
 import './App.css'
+import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   return (
-    <WalletProvider>
-      <Router>
-        <Routes>
+    <AuthProvider>
+      <WalletProvider>
+        <Router>
+          <Routes>
           <Route path="/" element={<HomePage />} />
-        </Routes>
-      </Router>
-    </WalletProvider>
+          </Routes>
+        </Router>
+      </WalletProvider>
+    </AuthProvider>
   );
 }
 
