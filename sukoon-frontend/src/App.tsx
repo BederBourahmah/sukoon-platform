@@ -1,17 +1,17 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { BlockchainProvider } from './contexts/BlockchainContext';
+import { WalletProvider } from './contexts/WalletContext';
 import HomePage from './pages/HomePage';
 import './App.css'
 
 function App() {
   return (
-    <BlockchainProvider>
+    <WalletProvider>
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
         </Routes>
       </Router>
-    </BlockchainProvider>
+    </WalletProvider>
   );
 }
 

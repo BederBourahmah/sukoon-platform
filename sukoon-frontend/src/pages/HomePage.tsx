@@ -1,67 +1,57 @@
-import { useBlockchain } from '../contexts/BlockchainContext';
-import { blockchainService } from '../services/api';
-import { useState } from 'react';
+import { useWallet } from '../contexts/WalletContext';
 
 function HomePage() {
-    const { address, balance, connect, isConnecting, error } = useBlockchain();
-    const [contractBalance, setContractBalance] = useState<string | null>(null);
-    const [contractAddress, setContractAddress] = useState<string>('');
-
-    const handleCheckBalance = async () => {
-        try {
-            const result = await blockchainService.getContractBalance(contractAddress);
-            setContractBalance(result.balance);
-        } catch (err) {
-            console.error('Error checking contract balance:', err);
-        }
-    };
+    const { 
+        address, 
+        balance, 
+        isConnecting, 
+        error,
+        connectMetaMask,
+        connectWalletConnect,
+        disconnect
+    } = useWallet();
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Welcome to Sukoon</h1>
-            <p className="mb-4">Your Sharia-compliant vehicle financing platform.</p>
-            
-            <div className="mb-4">
-                {!address ? (
-                    <button 
-                        onClick={connect}
-                        disabled={isConnecting}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                    >
-                        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-                    </button>
-                ) : (
-                    <div>
-                        <p>Connected Address: {address}</p>
-                        <p>Balance: {balance} ETH</p>
-                    </div>
-                )}
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="text-center max-w-2xl">
+                <h1 className="text-4xl font-bold mb-4">Welcome to Sukoon</h1>
+                <p className="text-xl mb-8">Your Sharia-compliant vehicle financing platform.</p>
                 
-                {error && (
-                    <p className="text-red-500 mt-2">{error}</p>
-                )}
-            </div>
-
-            <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">Check Contract Balance</h2>
-                <div className="flex gap-4">
-                    <input
-                        type="text"
-                        value={contractAddress}
-                        onChange={(e) => setContractAddress(e.target.value)}
-                        placeholder="Enter contract address"
-                        className="flex-1 p-2 border rounded"
-                    />
-                    <button
-                        onClick={handleCheckBalance}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                        Check Balance
-                    </button>
+                <div className="mb-4">
+                    {!address ? (
+                        <div className="flex gap-4 justify-center">
+                            <button 
+                                onClick={connectMetaMask}
+                                disabled={isConnecting}
+                                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+                            >
+                                {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
+                            </button>
+                            <button 
+                                onClick={connectWalletConnect}
+                                disabled={isConnecting}
+                                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+                            >
+                                {isConnecting ? 'Connecting...' : 'Connect WalletConnect'}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="text-center">
+                            <p className="text-lg">Connected Address: {address}</p>
+                            <p className="text-lg mb-4">Balance: {balance} ETH</p>
+                            <button
+                                onClick={disconnect}
+                                className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600"
+                            >
+                                Disconnect
+                            </button>
+                        </div>
+                    )}
+                    
+                    {error && (
+                        <p className="text-red-500 mt-4">{error}</p>
+                    )}
                 </div>
-                {contractBalance && (
-                    <p className="mt-4">Contract Balance: {contractBalance} ETH</p>
-                )}
             </div>
         </div>
     );
