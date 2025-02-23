@@ -7,6 +7,7 @@ using SukoonBackend.Models;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using System.Collections.Generic;
 
 namespace SukoonBackend.Services
 {
@@ -14,7 +15,13 @@ namespace SukoonBackend.Services
     {
         string GenerateNonce(string address);
         bool VerifySignature(string address, string signature, string nonce);
-        string GenerateToken(string address);
+        TokenResponse GenerateTokens(string address);
+    }
+
+    public class TokenResponse
+    {
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
     }
 
     public class AuthService : IAuthService
@@ -69,18 +76,39 @@ namespace SukoonBackend.Services
             return $"nonce:{address.ToLower()}";
         }
 
-        public string GenerateToken(string address)
+        public TokenResponse GenerateTokens(string address)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key not configured")));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var roles = new List<string> { UserRoles.User };
+            
+            // Get admin addresses from configuration
+            var adminAddresses = _configuration.GetSection("AdminAddresses").Get<string[]>() ?? Array.Empty<string>();
+            if (adminAddresses.Contains(address.ToLower()))
             {
-                new Claim(ClaimTypes.NameIdentifier, address),
-                new Claim(ClaimTypes.Role, "User")
-            };
+                roles.Add(UserRoles.Admin);
+            }
 
-            var token = new JwtSecurityToken(
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, address)
+            };
+            
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var accessToken = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(15),
+                signingCredentials: credentials
+            );
+
+            var refreshToken = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
@@ -88,7 +116,10 @@ namespace SukoonBackend.Services
                 signingCredentials: credentials
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new TokenResponse {
+                AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
+                RefreshToken = new JwtSecurityTokenHandler().WriteToken(refreshToken)
+            };
         }
     }
 }

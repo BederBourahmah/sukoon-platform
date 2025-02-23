@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 
-export interface AuthResponse {
-    token: string;
+interface AuthResponse {
+    accessToken: string;
+    refreshToken: string;
     address: string;
 }
 
@@ -50,6 +51,22 @@ class AuthService {
 
         // Verify signature and get JWT token
         return this.verifySignature(address, signature, nonce);
+    }
+
+    async refresh(refreshToken: string): Promise<AuthResponse> {
+        const response = await fetch(`${this.API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to refresh token');
+        }
+
+        return response.json();
     }
 }
 

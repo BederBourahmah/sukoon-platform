@@ -42,12 +42,20 @@ namespace SukoonBackend.Controllers
                 return Unauthorized("Invalid signature");
             }
 
-            var token = _authService.GenerateToken(request.Address);
+            var tokens = _authService.GenerateTokens(request.Address);
             return Ok(new AuthResponse 
             { 
-                Token = token,
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
                 Address = request.Address
             });
+        }
+
+        [HttpPost("refresh")]
+        public ActionResult<AuthResponse> RefreshToken([FromBody] RefreshRequest request)
+        {
+            var tokens = _authService.GenerateTokens(request.Address);
+            return Ok(tokens);
         }
     }
 }

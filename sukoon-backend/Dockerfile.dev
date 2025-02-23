@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+WORKDIR /app
+
+# Install EF Core tools
+RUN dotnet tool install --global dotnet-ef
+
+# Add dotnet tools to PATH
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+# Install debugger
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /root/vsdbg
+
+COPY ["SukoonBackend/SukoonBackend.csproj", "SukoonBackend/"]
+RUN dotnet restore "SukoonBackend/SukoonBackend.csproj"
+
+COPY . .
+WORKDIR "/app/SukoonBackend"
+
+# Set environment variables to force HTTP
+ENV ASPNETCORE_URLS=http://+:5179
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# Run in debug mode with HTTP only
+ENTRYPOINT ["dotnet", "watch", "run", "--no-restore"] 

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using SukoonBackend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SukoonBackend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class BlockchainController : ControllerBase
     {
         private readonly IBlockchainService _blockchainService;
@@ -15,6 +17,7 @@ namespace SukoonBackend.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = $"{UserRoles.User},{UserRoles.Admin}")]
         public IActionResult GetStatus()
         {
             return Ok(new { 
@@ -25,6 +28,7 @@ namespace SukoonBackend.Controllers
         }
 
         [HttpGet("contract/{address}")]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> GetContractBalance(string address)
         {
             try

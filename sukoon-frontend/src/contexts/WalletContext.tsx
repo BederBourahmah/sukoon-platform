@@ -62,7 +62,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setProvider(ethersProvider);
 
       // Only authenticate if we don't already have a token
-      const existingToken = localStorage.getItem('auth_token');
+      const existingToken = sessionStorage.getItem('access_token');
       if (!existingToken) {
         await authenticate(ethersProvider as ethers.BrowserProvider, walletAddress);
       }
@@ -134,18 +134,31 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Initialize MetaMask provider on mount
   useEffect(() => {
-    initializeMetaMaskProvider();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        initializeMetaMaskProvider();
+        setupMetaMaskEventListeners();
+      } else {
+        cleanupMetaMaskEventListeners();
+      }
+    };
+
+    // Initial setup if page is visible
+    if (document.visibilityState === 'visible') {
+      initializeMetaMaskProvider();
+      setupMetaMaskEventListeners();
+    }
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      cleanupMetaMaskEventListeners();
+    };
   }, []);
-
-  // Setup MetaMask event listeners
-  useEffect(() => {
-    if (!window.ethereum) return;
-
-    setupMetaMaskEventListeners();
-    return cleanupMetaMaskEventListeners;
-  }, [provider]);
 
   const initializeMetaMaskProvider = async () => {
     try {

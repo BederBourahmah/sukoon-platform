@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { useWallet } from './WalletContext';
 import { blockchainService } from '../services/blockchain';
 
 interface BlockchainContextType {
@@ -12,19 +13,19 @@ interface BlockchainContextType {
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
 
 export function BlockchainProvider({ children }: { children: ReactNode }) {
-    const [address, setAddress] = useState<string | null>(null);
-    const [balance, setBalance] = useState<string | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { connectMetaMask, connectWalletConnect, address, balance } = useWallet();
 
     const connect = async () => {
         setIsConnecting(true);
         setError(null);
         try {
-            const userAddress = await blockchainService.connect();
-            setAddress(userAddress);
-            const userBalance = await blockchainService.getBalance(userAddress);
-            setBalance(userBalance);
+            if (window.ethereum) {
+                await connectMetaMask();
+            } else {
+                await connectWalletConnect();
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to connect');
         } finally {
@@ -33,7 +34,13 @@ export function BlockchainProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <BlockchainContext.Provider value={{ address, balance, connect, isConnecting, error }}>
+        <BlockchainContext.Provider value={{ 
+            address, 
+            balance, 
+            connect, 
+            isConnecting, 
+            error 
+        }}>
             {children}
         </BlockchainContext.Provider>
     );

@@ -1,7 +1,10 @@
 import { useWallet } from '../contexts/WalletContext';
 import { useAuth } from '../contexts/AuthContext';
+import { blockchainService } from '../services/api';
+import { useState } from 'react';
 
 function HomePage() {
+    const [blockchainStatus, setBlockchainStatus] = useState<string | null>(null);
     const { 
         address, 
         balance, 
@@ -17,6 +20,15 @@ function HomePage() {
         isAuthenticating,
         error: authError
     } = useAuth();
+
+    const checkBlockchainStatus = async () => {
+        try {
+            const status = await blockchainService.getStatus();
+            setBlockchainStatus(JSON.stringify(status, null, 2));
+        } catch (error) {
+            setBlockchainStatus('Error fetching blockchain status');
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -56,6 +68,21 @@ function HomePage() {
                             >
                                 Disconnect
                             </button>
+                            {isAuthenticated && (
+                                <div className="mt-4">
+                                    <button
+                                        onClick={checkBlockchainStatus}
+                                        className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 mr-4"
+                                    >
+                                        Check Blockchain Status
+                                    </button>
+                                    {blockchainStatus && (
+                                        <pre className="mt-4 p-4 bg-gray-100 rounded-lg overflow-auto">
+                                            {blockchainStatus}
+                                        </pre>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                     
