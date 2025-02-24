@@ -7,10 +7,11 @@ RUN dotnet tool install --global dotnet-ef
 # Add dotnet tools to PATH
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
-# Install debugger
+# Install debugger and required tools (combined into one RUN to reduce layers)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip \
-    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /root/vsdbg
+    && apt-get install -y --no-install-recommends unzip procps curl \
+    && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /root/vsdbg \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY ["SukoonBackend/SukoonBackend.csproj", "SukoonBackend/"]
 RUN dotnet restore "SukoonBackend/SukoonBackend.csproj"
@@ -18,7 +19,7 @@ RUN dotnet restore "SukoonBackend/SukoonBackend.csproj"
 COPY . .
 WORKDIR "/app/SukoonBackend"
 
-# Set environment variables to force HTTP
+# Set environment variables
 ENV ASPNETCORE_URLS=http://+:5179
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 ENV ASPNETCORE_ENVIRONMENT=Development

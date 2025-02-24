@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Docker .NET Attach",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickRemoteProcess}",
+      "preLaunchTask": "docker-compose-up",
+      "postDebugTask": "docker-compose-down",
+      "pipeTransport": {
+        "pipeProgram": "docker",
+        "pipeArgs": ["exec", "-i", "sukoon-backend-backend-1"],
+        "debuggerPath": "/root/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceRoot}",
+        "quoteArgs": false
+      },
+      "sourceFileMap": {
+        "/app": "${workspaceFolder}"
+      },
+      "justMyCode": true,
+      "requireExactSource": false
+    }
+  ]
+} 

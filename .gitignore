@@ -157,6 +157,3 @@ hardhat.config.local.js
 
 # HTTP files
 *.http
-
-# VSCode specific
-.vscode/
